@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnteraktif Pazarlama Yönetimi Notları</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: Raporun doğrusal yapısı yerine, kullanıcıların konular arasında serbestçe geçiş yapabileceği tematik bir yapı tasarlandı. Sol tarafta sabit bir gezinme menüsü, ana konulara hızlı erişim sağlar. Ana içerik alanı, sekmeler, tıklanabilir diyagramlar ve grafikler gibi interaktif bileşenlerle bilgiyi parçalara ayırır. Bu yapı, kullanıcının pasif bir okuyucu olmak yerine aktif bir öğrenen olmasını teşvik eder. Örneğin, "Pazarlama Karması" bölümü, 4P, 4C ve Modern Karma arasında geçiş yapabilen sekmelerle sunularak modeller arasındaki evrimi ve karşılaştırmayı kolaylaştırır. Bu yaklaşım, karmaşık bilgilerin daha kolay sindirilmesini ve akılda kalmasını hedefler. -->
+    <!-- Visualization & Content Choices: 
+        - Pazarlama Evrimi -> Goal: Change -> Viz: Interactive Timeline -> Interaction: Click to reveal details -> Justification: Shows historical progression clearly -> Method: HTML/JS.
+        - Maslow Hiyerarşisi -> Goal: Organize -> Viz: HTML Pyramid Diagram -> Interaction: Hover to highlight and show info -> Justification: Standard and intuitive for this theory -> Method: HTML/JS.
+        - STP Çerçevesi -> Goal: Explain Process -> Viz: 3-Part Flow Diagram -> Interaction: Click a step to update content pane below -> Justification: Breaks down a core process into manageable steps -> Method: HTML/JS.
+        - Pazarlama Karması (4P/4C/Modern) -> Goal: Compare -> Viz: Tabbed Content Cards -> Interaction: Click tabs to switch between frameworks -> Justification: Allows for easy comparison of related models -> Method: HTML/JS.
+        - Pazarlama Düşüncesi Anlayışları -> Goal: Compare -> Viz: Radar Chart -> Interaction: Chart updates based on selected era from timeline -> Justification: Visually represents the shift in focus between different marketing philosophies -> Method: Chart.js/Canvas.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #4A4A4A;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        .nav-link.active {
+            border-left-color: #4F46E5;
+            background-color: #EEF2FF;
+            color: #4F46E5;
+            font-weight: 600;
+        }
+        .nav-link:hover {
+            background-color: #F4F4F5;
+            border-left-color: #A5B4FC;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .tab-button.active {
+            background-color: #4F46E5;
+            color: white;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white shadow-md sticky top-0 h-screen overflow-y-auto hidden md:block">
+            <div class="p-6">
+                <h1 class="text-xl font-bold text-gray-800">Pazarlama Yönetimi</h1>
+                <p class="text-sm text-gray-500 mt-1">İnteraktif Ders Notları</p>
+            </div>
+            <nav id="navigationMenu" class="mt-4">
+                <a href="#tanim" class="nav-link block p-4 text-sm text-gray-700 active">1. Tanım ve Kapsam</a>
+                <a href="#kavramlar" class="nav-link block p-4 text-sm text-gray-700">2. Temel Kavramlar</a>
+                <a href="#stp" class="nav-link block p-4 text-sm text-gray-700">3. STP Çerçevesi</a>
+                <a href="#gelisim" class="nav-link block p-4 text-sm text-gray-700">4. Pazarlama Düşüncesi</a>
+                <a href="#karma" class="nav-link block p-4 text-sm text-gray-700">5. Pazarlama Karması</a>
+                <a href="#cevre" class="nav-link block p-4 text-sm text-gray-700">6. Pazarlama Çevresi</a>
+                <a href="#bilgi" class="nav-link block p-4 text-sm text-gray-700">7. Bilgi Sistemi ve Araştırma</a>
+                <a href="#pazarlar" class="nav-link block p-4 text-sm text-gray-700">8. Pazarlar ve Davranışlar</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-10 bg-gray-50/50">
+            
+            <section id="tanim" class="content-section active">
+                <h2 class="text-3xl font-bold text-gray-800">1. Pazarlamanın Tanımı ve Kapsamı</h2>
+                <p class="mt-4 text-lg text-gray-600">Bu bölümde pazarlamanın temel tanımı, yönetimsel boyutu ve işletme içindeki bütünsel rolü ele alınmaktadır. Pazarlamanın sadece bir departman faaliyeti olmadığı, tüm organizasyonu kapsayan bir felsefe olduğu vurgulanır.</p>
+                <div class="mt-8 grid gap-8 md:grid-cols-2">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold text-indigo-700">Pazarlama Nedir?</h3>
+                        <p class="mt-2 text-gray-600">Bireysel ve sosyal ihtiyaçları kârlı bir şekilde belirleyip karşılamaktır. Temel amacı, müşteriler ve toplum için değer yaratan teklifler (ürün/hizmet) oluşturmak, iletişimini yapmak, dağıtmak ve değişimini sağlamaktır.</p>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-semibold text-indigo-700">Pazarlama Yönetimi</h3>
+                        <p class="mt-2 text-gray-600">Hedef pazarları seçerek, bu pazardaki müşterileri bulma, elde tutma ve sayılarını artırma sanatıdır. Bu süreç, üstün müşteri değeri yaratma ve sunma üzerine kuruludur.</p>
+                    </div>
+                     <div class="card p-6 md:col-span-2">
+                        <h3 class="text-xl font-semibold text-indigo-700">Pazarlama ve İktisat İlişkisi</h3>
+                        <p class="mt-2 text-gray-600">Pazarlama, teorik temellerini iktisat biliminden alır. Her iki disiplin de insan ihtiyaçlarını ve tüketici davranışlarını inceler. İktisat daha makro bir dengeye odaklanırken, pazarlama daha mikro (birey ve firma) bir bakış açısına sahiptir. Ortak amaçları toplumsal refahı artırmaktır.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="kavramlar" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">2. Temel Pazarlama Kavramları</h2>
+                 <p class="mt-4 text-lg text-gray-600">Pazarlamanın yapı taşlarını oluşturan temel kavramları keşfedin. Değişim, fayda, ihtiyaç, istek ve talep gibi konuların yanı sıra, tüketici motivasyonunu anlamada kilit bir rol oynayan Maslow'un İhtiyaçlar Hiyerarşisi'ni interaktif olarak inceleyebilirsiniz.</p>
+                <div class="mt-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    <div class="card p-6 lg:col-span-3">
+                         <h3 class="text-xl font-semibold text-indigo-700">İhtiyaç, İstek ve Talep</h3>
+                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                            <div class="p-4 bg-indigo-50 rounded-lg">
+                                <h4 class="font-bold">İhtiyaç</h4>
+                                <p class="text-sm">Barınma, beslenme gibi temel gereksinimlerdir.</p>
+                            </div>
+                            <div class="p-4 bg-purple-50 rounded-lg">
+                                <h4 class="font-bold">İstek</h4>
+                                <p class="text-sm">İhtiyaçların kültürel ve kişisel özelliklere göre şekillenmiş halidir.</p>
+                            </div>
+                             <div class="p-4 bg-pink-50 rounded-lg">
+                                <h4 class="font-bold">Talep</h4>
+                                <p class="text-sm">Satın alma gücüyle desteklenen istektir.</p>
+                            </div>
+                         </div>
+                    </div>
+                    <div class="card p-6 lg:col-span-1">
+                        <h3 class="text-xl font-semibold text-indigo-700">Fayda Kavramı</h3>
+                        <ul class="mt-2 space-y-2 text-gray-600">
+                           <li><strong>Şekil:</strong> Ürünün istenen biçimde olması.</li>
+                           <li><strong>Zaman:</strong> Ürünün istenen anda mevcut olması.</li>
+                           <li><strong>Yer:</strong> Ürünün istenen yerde sunulması.</li>
+                           <li><strong>Mülkiyet:</strong> Ürüne sahip olabilme.</li>
+                        </ul>
+                    </div>
+                    <div id="maslowHierarchy" class="card p-6 lg:col-span-2">
+                        <h3 class="text-xl font-semibold text-indigo-700 text-center">Maslow'un İhtiyaçlar Hiyerarşisi</h3>
+                        <div class="relative w-full max-w-sm mx-auto mt-4 h-80">
+                            <div class="maslow-level absolute bottom-0 w-full h-1/5 bg-red-400 flex items-center justify-center cursor-pointer clip-pyramid-1" data-level="1"><span class="text-white font-bold">Fizyolojik</span></div>
+                            <div class="maslow-level absolute bottom-[20%] w-4/5 left-[10%] h-1/5 bg-orange-400 flex items-center justify-center cursor-pointer clip-pyramid-2" data-level="2"><span class="text-white font-bold">Güvenlik</span></div>
+                            <div class="maslow-level absolute bottom-[40%] w-3/5 left-[20%] h-1/5 bg-yellow-400 flex items-center justify-center cursor-pointer clip-pyramid-3" data-level="3"><span class="text-white font-bold">Sevgi/Ait Olma</span></div>
+                            <div class="maslow-level absolute bottom-[60%] w-2/5 left-[30%] h-1/5 bg-green-400 flex items-center justify-center cursor-pointer clip-pyramid-4" data-level="4"><span class="text-white font-bold">Saygı</span></div>
+                            <div class="maslow-level absolute bottom-[80%] w-1/5 left-[40%] h-1/5 bg-blue-400 flex items-center justify-center cursor-pointer clip-pyramid-5" data-level="5"><span class="text-white font-bold">Kendini G.</span></div>
+                        </div>
+                        <p id="maslowInfo" class="mt-4 text-center text-gray-700 h-12">Seviyelerin üzerine gelerek açıklamaları okuyun.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="stp" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">3. STP Çerçevesi: Pazar Analizi</h2>
+                <p class="mt-4 text-lg text-gray-600">Modern pazarlamanın temelini oluşturan STP (Bölümlendirme, Hedefleme, Konumlandırma) sürecini interaktif olarak inceleyin. Her bir adıma tıklayarak ilgili stratejileri ve kriterleri keşfedin. Bu yapı, doğru müşteriye doğru mesajla nasıl ulaşılacağını anlamanıza yardımcı olur.</p>
+                <div class="mt-8">
+                    <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                        <button class="stp-button card p-4 w-full md:w-auto text-center" data-stp="segmentation">
+                            <h3 class="text-xl font-semibold text-indigo-700">Segmentation</h3>
+                            <p class="text-sm">Pazar Bölümlendirme</p>
+                        </button>
+                        <span class="text-2xl font-bold text-gray-400 hidden md:block">→</span>
+                         <button class="stp-button card p-4 w-full md:w-auto text-center" data-stp="targeting">
+                            <h3 class="text-xl font-semibold text-indigo-700">Targeting</h3>
+                            <p class="text-sm">Hedef Pazar Belirleme</p>
+                        </button>
+                        <span class="text-2xl font-bold text-gray-400 hidden md:block">→</span>
+                         <button class="stp-button card p-4 w-full md:w-auto text-center" data-stp="positioning">
+                            <h3 class="text-xl font-semibold text-indigo-700">Positioning</h3>
+                            <p class="text-sm">Konumlandırma</p>
+                        </button>
+                    </div>
+                    <div id="stpContent" class="mt-8 card p-6 min-h-[200px]">
+                        <p class="text-gray-600">Başlamak için yukarıdaki adımlardan birine tıklayın.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="gelisim" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">4. Pazarlama Düşüncesinin Gelişimi</h2>
+                 <p class="mt-4 text-lg text-gray-600">Pazarlama anlayışının zaman içindeki evrimini keşfedin. Üretim odaklı yaklaşımdan günümüzün bütünsel pazarlama felsefesine uzanan bu yolculuğu interaktif zaman çizelgesi ve karşılaştırmalı grafik üzerinden inceleyin. Her dönemin odak noktasını ve temel felsefesini anlamak, modern pazarlamanın temellerini kavramanıza yardımcı olacaktır.</p>
+                <div id="timeline" class="mt-8 flex flex-col md:flex-row justify-between space-y-4 md:space-y-0 md:space-x-2">
+                     <button class="timeline-event card p-4 text-center flex-1" data-era="uretim">Üretim Anlayışı</button>
+                     <button class="timeline-event card p-4 text-center flex-1" data-era="urun">Ürün Anlayışı</button>
+                     <button class="timeline-event card p-4 text-center flex-1" data-era="satis">Satış Anlayışı</button>
+                     <button class="timeline-event card p-4 text-center flex-1" data-era="pazarlama">Pazarlama Anlayışı</button>
+                     <button class="timeline-event card p-4 text-center flex-1" data-era="butunsel">Bütünsel Anlayış</button>
+                </div>
+                <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div id="eraDetails" class="card p-6">
+                        <h3 id="eraTitle" class="text-xl font-semibold text-indigo-700">Dönem Detayları</h3>
+                        <p id="eraDescription" class="mt-2 text-gray-600">İncelemek için bir dönem seçin.</p>
+                        <blockquote id="eraQuote" class="mt-4 border-l-4 border-indigo-500 pl-4 italic text-gray-500"></blockquote>
+                    </div>
+                    <div class="card p-6">
+                         <h3 class="text-xl font-semibold text-indigo-700 text-center">Dönemsel Odak Alanları</h3>
+                         <div class="chart-container">
+                            <canvas id="eraFocusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+             <section id="karma" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">5. Pazarlama Karması ve Modern Yaklaşımlar</h2>
+                 <p class="mt-4 text-lg text-gray-600">Pazarlama stratejilerinin temel araçları olan pazarlama karması modellerini keşfedin. Geleneksel 4P modelinden, müşteri odaklı 4C'ye ve günümüzün modern yaklaşımlarına kadar olan evrimi interaktif sekmeler aracılığıyla karşılaştırın. Her bir modelin bileşenlerini ve felsefesini anlamak, strateji oluşturma yeteneğinizi geliştirecektir.</p>
+                <div class="mt-8">
+                    <div class="flex justify-center space-x-2 md:space-x-4 bg-gray-200 p-2 rounded-lg">
+                        <button class="mix-tab-button tab-button flex-1 py-2 px-4 rounded-md text-sm md:text-base font-semibold transition active" data-mix="4p">Geleneksel 4P</button>
+                        <button class="mix-tab-button tab-button flex-1 py-2 px-4 rounded-md text-sm md:text-base font-semibold transition" data-mix="4c">Müşteri Odaklı 4C</button>
+                        <button class="mix-tab-button tab-button flex-1 py-2 px-4 rounded-md text-sm md:text-base font-semibold transition" data-mix="modern">Modern Karma</button>
+                    </div>
+                    <div id="mixContent" class="mt-8"></div>
+                </div>
+            </section>
+
+             <section id="cevre" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">6. Pazarlama Çevresi</h2>
+                 <p class="mt-4 text-lg text-gray-600">Pazarlama faaliyetlerinin içinde gerçekleştiği dinamik çevreyi anlayın. İşletmenin kontrolü dışındaki Makro Çevre güçleri ve doğrudan etkileşimde olduğu Mikro Çevre unsurlarını inceleyerek, stratejik kararları etkileyen faktörler hakkında bütünsel bir bakış açısı kazanın.</p>
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                         <h3 class="text-xl font-semibold text-indigo-700">Makro Çevre</h3>
+                         <p class="text-sm text-gray-500">İşletmeyi dolaylı etkileyen geniş toplumsal güçler.</p>
+                         <ul class="mt-4 space-y-2 list-disc list-inside">
+                             <li>Demografik</li>
+                             <li>Ekonomik</li>
+                             <li>Sosyal ve Kültürel</li>
+                             <li>Politik ve Hukuki</li>
+                             <li>Teknolojik</li>
+                         </ul>
+                    </div>
+                     <div class="card p-6">
+                         <h3 class="text-xl font-semibold text-indigo-700">Mikro Çevre</h3>
+                         <p class="text-sm text-gray-500">İşletmeyi doğrudan etkileyen yakın çevre.</p>
+                          <ul class="mt-4 space-y-2 list-disc list-inside">
+                             <li>İşletme (İç Faktörler)</li>
+                             <li>Pazar (Rakipler)</li>
+                             <li>Tedarikçiler</li>
+                             <li>Aracı Kuruluşlar</li>
+                         </ul>
+                    </div>
+                </div>
+            </section>
+
+             <section id="bilgi" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">7. Bilgi Sistemi ve Araştırma</h2>
+                <p class="mt-4 text-lg text-gray-600">Etkili pazarlama kararlarının temelini oluşturan bilgi toplama ve analiz süreçlerini öğrenin. Pazarlama Bilgi Sistemi'nin (PBS) sürekli yapısı ile Pazarlama Araştırması'nın spesifik problem odaklı doğası arasındaki farkı ve araştırma sürecinin adımlarını keşfedin.</p>
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div class="card p-6">
+                         <h3 class="text-xl font-semibold text-indigo-700">Pazarlama Bilgi Sistemi (PBS)</h3>
+                         <p class="mt-2 text-gray-600">Pazarlama kararları için gerekli olan bilgiyi sürekli olarak toplama, analiz etme, depolama ve dağıtma sürecidir.</p>
+                    </div>
+                     <div class="card p-6">
+                         <h3 class="text-xl font-semibold text-indigo-700">Pazarlama Araştırması</h3>
+                         <p class="mt-2 text-gray-600">Belirli bir pazarlama problemine ilişkin verilerin sistematik ve objektif olarak toplanması, analiz edilmesi ve yorumlanmasıdır. PBS'nin bir alt sistemidir.</p>
+                    </div>
+                    <div class="card p-6 md:col-span-2">
+                        <h3 class="text-xl font-semibold text-indigo-700">Araştırma Süreci Adımları</h3>
+                        <div class="mt-4 flex flex-col md:flex-row md:space-x-4 space-y-2 md:space-y-0">
+                           <div class="flex-1 text-center p-3 bg-gray-100 rounded-lg">1. Problemin Belirlenmesi</div>
+                           <div class="flex-1 text-center p-3 bg-gray-100 rounded-lg">2. Planın Geliştirilmesi</div>
+                           <div class="flex-1 text-center p-3 bg-gray-100 rounded-lg">3. Veri Toplama</div>
+                           <div class="flex-1 text-center p-3 bg-gray-100 rounded-lg">4. Analiz ve Yorumlama</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+             <section id="pazarlar" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">8. Pazarlar ve Davranışlar</h2>
+                 <p class="mt-4 text-lg text-gray-600">Pazarlamanın faaliyet gösterdiği alanları ve bu alanlardaki temel davranış farklılıklarını öğrenin. Nihai tüketicilere yönelik Tüketici Pazarları (B2C) ile kurumsal müşterilere yönelik Endüstriyel Pazarlar (B2B) arasındaki temel ayrımları ve özelliklerini kavrayın.</p>
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                         <h3 class="text-xl font-semibold text-indigo-700">Tüketici Pazarları (B2C)</h3>
+                         <p class="mt-2 text-gray-600">Ürün ve hizmetlerin kişisel veya ailesel tüketim için nihai tüketicilere satıldığı pazarlardır.</p>
+                         <ul class="mt-4 space-y-2 list-disc list-inside text-sm">
+                            <li>Duygusal kararlar ön planda olabilir.</li>
+                            <li>Daha geniş bir kitle hedeflenir.</li>
+                            <li>Satın alma süreci genellikle daha kısadır.</li>
+                         </ul>
+                    </div>
+                     <div class="card p-6">
+                         <h3 class="text-xl font-semibold text-indigo-700">Endüstriyel Pazarlar (B2B)</h3>
+                         <p class="mt-2 text-gray-600">Ürün ve hizmetlerin başka ürün/hizmet üretiminde kullanılmak ya da tekrar satılmak amacıyla kurumlara satıldığı pazarlardır.</p>
+                          <ul class="mt-4 space-y-2 list-disc list-inside text-sm">
+                            <li>Rasyonel ve mantıksal kararlar ağırlıktadır.</li>
+                            <li>Daha niş ve özel bir kitle hedeflenir.</li>
+                            <li>Satın alma süreci genellikle daha uzun ve karmaşıktır.</li>
+                         </ul>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('.content-section');
+
+    const contentData = {
+        maslow: {
+            1: "Nefes alma, yeme, içme, uyku gibi temel yaşamsal gereksinimler.",
+            2: "Kişisel, finansal, sağlık ve genel esenlik güvenliği.",
+            3: "Aile, arkadaşlık, romantik ilişkiler gibi sosyal bağlar ve aidiyet hissi.",
+            4: "Başkalarından saygı görme, başarı, statü ve kendine saygı.",
+            5: "Bir bireyin potansiyelini en üst düzeye çıkarma ve gerçekleştirme arzusu."
+        },
+        stp: {
+            segmentation: `
+                <h3 class="text-xl font-semibold text-indigo-700">Pazar Bölümlendirme Kriterleri</h3>
+                <p class="mt-2 text-gray-600">Pazarın, ortak ihtiyaçlara ve özelliklere sahip tüketici gruplarına ayrılmasıdır.</p>
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Coğrafik:</strong> Ülke, şehir, iklim.</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Demografik:</strong> Yaş, cinsiyet, gelir.</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Psikografik:</strong> Yaşam tarzı, kişilik.</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Davranışsal:</strong> Marka sadakati, kullanım sıklığı.</div>
+                </div>`,
+            targeting: `
+                <h3 class="text-xl font-semibold text-indigo-700">Hedef Pazar Stratejileri</h3>
+                <p class="mt-2 text-gray-600">İşletmenin kaynakları ve hedefleri doğrultusunda en uygun bölüm veya bölümlerin seçilmesidir.</p>
+                 <ul class="mt-4 space-y-2 text-gray-600">
+                    <li><strong>Farklılaştırılmamış:</strong> Tüm pazara tek bir ürünle hitap etme.</li>
+                    <li><strong>Farklılaştırılmış:</strong> Her pazar bölümüne ayrı pazarlama karmaları geliştirme.</li>
+                    <li><strong>Yoğunlaştırılmış (Niş):</strong> Kaynakları tek bir veya birkaç küçük pazar bölümünde yoğunlaştırma.</li>
+                </ul>`,
+            positioning: `
+                 <h3 class="text-xl font-semibold text-indigo-700">Konumlandırma</h3>
+                 <p class="mt-2 text-gray-600">Seçilen hedef pazarın zihninde, rakip ürünlere göre net, farklı ve arzu edilir bir imaj yaratma sürecidir. Markanın benzerlik ve farklılık noktaları vurgulanır.</p>`
+        },
+        era: {
+            uretim: { title: "Üretim Anlayışı", desc: "Odak noktası yüksek üretim verimliliği ve düşük maliyettir.", quote: "Ne üretirsem onu satarım.", data: [5, 4, 1, 3, 1] },
+            urun: { title: "Ürün Anlayışı", desc: "Odak noktası en kaliteli ve en yenilikçi ürünü sunmaktır.", quote: "İyi mal kendini satar.", data: [4, 5, 2, 4, 2] },
+            satis: { title: "Satış Anlayışı", desc: "Odak noktası, agresif satış ve tutundurma faaliyetleriyle müşteriyi ikna etmektir.", quote: "Ne ürettiğimi satmalıyım.", data: [3, 3, 5, 2, 2] },
+            pazarlama: { title: "Pazarlama Anlayışı", desc: "Odak noktası müşteri ihtiyaç ve isteklerini anlamak ve bunlara uygun ürünler sunmaktır.", quote: "Müşteri için doğru ürünü bul.", data: [2, 4, 3, 5, 4] },
+            butunsel: { title: "Bütünsel (Holistic) Anlayış", desc: "Pazarlamada her şeyin birbiriyle bağlantılı olduğunu ve geniş bir bakış açısının gerekli olduğunu kabul eder.", quote: "Her şey önemlidir.", data: [4, 4, 4, 5, 5] },
+        },
+        mix: {
+            '4p': `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="card p-4"><h4 class="font-bold text-indigo-700">Ürün (Product)</h4><p class="text-sm">Hedef pazarın ihtiyaçlarını karşılayacak mal veya hizmet.</p></div>
+                        <div class="card p-4"><h4 class="font-bold text-indigo-700">Fiyat (Price)</h4><p class="text-sm">Tüketicinin ürüne sahip olmak için ödediği bedel.</p></div>
+                        <div class="card p-4"><h4 class="font-bold text-indigo-700">Yer (Place)</h4><p class="text-sm">Ürünün hedef kitleye ulaştırıldığı kanallar.</p></div>
+                        <div class="card p-4"><h4 class="font-bold text-indigo-700">Tutundurma (Promotion)</h4><p class="text-sm">Ürünü tanıtma ve satın almaya ikna etme faaliyetleri.</p></div>
+                   </div>`,
+            '4c': `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="card p-4"><h4 class="font-bold text-purple-700">Müşteri Değeri (Customer Value)</h4><p class="text-sm">Ürünün müşteriye sağladığı değer.</p></div>
+                        <div class="card p-4"><h4 class="font-bold text-purple-700">Müşteri Maliyeti (Cost)</h4><p class="text-sm">Fiyatın müşteri açısından toplam maliyeti.</p></div>
+                        <div class="card p-4"><h4 class="font-bold text-purple-700">Müşteriye Kolaylık (Convenience)</h4><p class="text-sm">Müşterinin ürüne kolayca ulaşabilmesi.</p></div>
+                        <div class="card p-4"><h4 class="font-bold text-purple-700">Müşteri İletişimi (Communication)</h4><p class="text-sm">Tutundurmanın karşılıklı iletişim olması.</p></div>
+                   </div>`,
+            'modern': `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="card p-4"><h4 class="font-bold text-teal-700">İnsanlar (People)</h4><p class="text-sm">Müşteriyle temas eden tüm çalışanlar.</p></div>
+                        <div class="card p-4"><h4 class="font-bold text-teal-700">Süreçler (Processes)</h4><p class="text-sm">Pazarlama faaliyetlerinin yönetilme şekli.</p></div>
+                        <div class="card p-4"><h4 class="font-bold text-teal-700">Programlar (Programs)</h4><p class="text-sm">Tüm bütünleşik pazarlama faaliyetleri.</p></div>
+                        <div class="card p-4"><h4 class="font-bold text-teal-700">Performans (Performance)</h4><p class="text-sm">Finansal ve finansal olmayan sonuçların ölçümü.</p></div>
+                   </div>`
+        }
+    };
+
+    function showSection(hash) {
+        sections.forEach(section => {
+            if ('#' + section.id === hash) {
+                section.classList.add('active');
+            } else {
+                section.classList.remove('active');
+            }
+        });
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === hash) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    }
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetHash = link.getAttribute('href');
+            showSection(targetHash);
+        });
+    });
+    
+    showSection('#tanim');
+
+    const maslowLevels = document.querySelectorAll('.maslow-level');
+    const maslowInfo = document.getElementById('maslowInfo');
+    maslowLevels.forEach(level => {
+        level.addEventListener('mouseenter', () => {
+            const levelId = level.dataset.level;
+            maslowInfo.textContent = contentData.maslow[levelId];
+        });
+        level.addEventListener('mouseleave', () => {
+            maslowInfo.textContent = 'Seviyelerin üzerine gelerek açıklamaları okuyun.';
+        });
+    });
+
+    const stpButtons = document.querySelectorAll('.stp-button');
+    const stpContent = document.getElementById('stpContent');
+    stpButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const stpKey = button.dataset.stp;
+            stpContent.innerHTML = contentData.stp[stpKey];
+        });
+    });
+
+    const timelineEvents = document.querySelectorAll('.timeline-event');
+    const eraTitle = document.getElementById('eraTitle');
+    const eraDescription = document.getElementById('eraDescription');
+    const eraQuote = document.getElementById('eraQuote');
+    const ctx = document.getElementById('eraFocusChart').getContext('2d');
+    let eraChart;
+
+    function createOrUpdateChart(data) {
+        if (eraChart) {
+            eraChart.data.datasets[0].data = data;
+            eraChart.update();
+        } else {
+            eraChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Üretim', 'Ürün', 'Satış', 'Müşteri', 'Bütünsel Odak'],
+                    datasets: [{
+                        label: 'Odak Alanları',
+                        data: data,
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        borderColor: 'rgba(79, 70, 229, 1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(79, 70, 229, 1)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    }
+    
+    timelineEvents.forEach(event => {
+        event.addEventListener('click', () => {
+            const eraKey = event.dataset.era;
+            const eraData = contentData.era[eraKey];
+            eraTitle.textContent = eraData.title;
+            eraDescription.textContent = eraData.desc;
+            eraQuote.textContent = `"${eraData.quote}"`;
+            createOrUpdateChart(eraData.data);
+        });
+    });
+    
+    document.querySelector('.timeline-event[data-era="pazarlama"]').click();
+
+    const mixTabButtons = document.querySelectorAll('.mix-tab-button');
+    const mixContent = document.getElementById('mixContent');
+
+    function updateMixContent(mixKey) {
+        mixContent.innerHTML = contentData.mix[mixKey];
+        mixTabButtons.forEach(btn => {
+            if (btn.dataset.mix === mixKey) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    mixTabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            updateMixContent(button.dataset.mix);
+        });
+    });
+    
+    updateMixContent('4p');
+});
+</script>
+</body>
+</html>
+
